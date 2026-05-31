@@ -1,22 +1,37 @@
 openapi: 3.1.0
 info:
-  # Do not change the title, if the title changes, the import paths will be broken
   title: Api
   version: 0.1.0
-  description: API specification
+  description: RoadSoS Kids Emergency Response System API
 servers:
   - url: /api
     description: Base API path
 tags:
   - name: health
     description: Health operations
+  - name: incidents
+    description: Emergency incident management
+  - name: vitals
+    description: Child vital sign data
+  - name: children
+    description: Child profiles
+  - name: hospitals
+    description: Hospital directory
+  - name: ambulances
+    description: Ambulance tracking
+  - name: responders
+    description: Emergency responder operations
+  - name: messages
+    description: Parent-child messaging
+  - name: dashboard
+    description: Dashboard summary data
+
 paths:
   /healthz:
     get:
       operationId: healthCheck
       tags: [health]
       summary: Health check
-      description: Returns server health status
       responses:
         "200":
           description: Healthy
@@ -24,6 +39,357 @@ paths:
             application/json:
               schema:
                 $ref: "#/components/schemas/HealthStatus"
+
+  /incidents:
+    get:
+      operationId: listIncidents
+      tags: [incidents]
+      summary: List all incidents
+      parameters:
+        - name: status
+          in: query
+          schema:
+            type: string
+        - name: limit
+          in: query
+          schema:
+            type: integer
+      responses:
+        "200":
+          description: List of incidents
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/Incident"
+    post:
+      operationId: createIncident
+      tags: [incidents]
+      summary: Create a new emergency incident
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/IncidentInput"
+      responses:
+        "201":
+          description: Created
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Incident"
+
+  /incidents/{incidentId}:
+    get:
+      operationId: getIncident
+      tags: [incidents]
+      summary: Get incident by ID
+      parameters:
+        - name: incidentId
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        "200":
+          description: Incident details
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Incident"
+    patch:
+      operationId: updateIncidentStatus
+      tags: [incidents]
+      summary: Update incident status
+      parameters:
+        - name: incidentId
+          in: path
+          required: true
+          schema:
+            type: string
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/IncidentStatusUpdate"
+      responses:
+        "200":
+          description: Updated incident
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Incident"
+
+  /incidents/{incidentId}/vitals:
+    get:
+      operationId: getIncidentVitals
+      tags: [vitals]
+      summary: Get latest vitals for an incident
+      parameters:
+        - name: incidentId
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        "200":
+          description: Vitals readings
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/VitalsReading"
+    post:
+      operationId: submitVitals
+      tags: [vitals]
+      summary: Submit new vitals reading from innerwear
+      parameters:
+        - name: incidentId
+          in: path
+          required: true
+          schema:
+            type: string
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/VitalsInput"
+      responses:
+        "201":
+          description: Vitals saved
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/VitalsReading"
+
+  /children:
+    get:
+      operationId: listChildren
+      tags: [children]
+      summary: List all child profiles
+      responses:
+        "200":
+          description: Children list
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/Child"
+    post:
+      operationId: createChild
+      tags: [children]
+      summary: Register a child profile
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/ChildInput"
+      responses:
+        "201":
+          description: Created
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Child"
+
+  /children/{childId}:
+    get:
+      operationId: getChild
+      tags: [children]
+      summary: Get child profile
+      parameters:
+        - name: childId
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        "200":
+          description: Child profile
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Child"
+
+  /hospitals:
+    get:
+      operationId: listHospitals
+      tags: [hospitals]
+      summary: List nearby hospitals
+      parameters:
+        - name: lat
+          in: query
+          schema:
+            type: number
+        - name: lng
+          in: query
+          schema:
+            type: number
+      responses:
+        "200":
+          description: Hospitals list
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/Hospital"
+
+  /ambulances:
+    get:
+      operationId: listAmbulances
+      tags: [ambulances]
+      summary: List ambulances
+      responses:
+        "200":
+          description: Ambulances list
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/Ambulance"
+
+  /ambulances/{ambulanceId}/location:
+    patch:
+      operationId: updateAmbulanceLocation
+      tags: [ambulances]
+      summary: Update ambulance GPS location
+      parameters:
+        - name: ambulanceId
+          in: path
+          required: true
+          schema:
+            type: string
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/LocationUpdate"
+      responses:
+        "200":
+          description: Updated
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Ambulance"
+
+  /messages:
+    post:
+      operationId: sendMessage
+      tags: [messages]
+      summary: Send a message (parent to child or responder)
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/MessageInput"
+      responses:
+        "201":
+          description: Message sent
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Message"
+
+  /messages/{incidentId}:
+    get:
+      operationId: listMessages
+      tags: [messages]
+      summary: List messages for an incident
+      parameters:
+        - name: incidentId
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        "200":
+          description: Messages
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/Message"
+
+  /dashboard/summary:
+    get:
+      operationId: getDashboardSummary
+      tags: [dashboard]
+      summary: Get dashboard summary statistics
+      responses:
+        "200":
+          description: Summary
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/DashboardSummary"
+
+  /dashboard/active-incidents:
+    get:
+      operationId: getActiveIncidents
+      tags: [dashboard]
+      summary: Get all active incidents with latest vitals
+      responses:
+        "200":
+          description: Active incidents
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/ActiveIncidentSummary"
+
+  /dashboard/timeline/{incidentId}:
+    get:
+      operationId: getIncidentTimeline
+      tags: [dashboard]
+      summary: Get chronological event timeline for an incident
+      parameters:
+        - name: incidentId
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        "200":
+          description: Timeline events
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/TimelineEvent"
+
+  /innerwear/sensor-data:
+    post:
+      operationId: submitSensorData
+      tags: [incidents]
+      summary: Submit raw sensor data from innerwear device
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/SensorDataInput"
+      responses:
+        "200":
+          description: Processed result
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/SensorDataResult"
+
 components:
   schemas:
     HealthStatus:
@@ -31,6 +397,483 @@ components:
       properties:
         status:
           type: string
-      required:
-        - status
+      required: [status]
 
+    Incident:
+      type: object
+      properties:
+        id:
+          type: string
+        childId:
+          type: string
+        childName:
+          type: string
+        childAge:
+          type: integer
+        severity:
+          type: string
+        status:
+          type: string
+        incidentType:
+          type: string
+        latitude:
+          type: number
+        longitude:
+          type: number
+        locationAddress:
+          type: string
+        accuracyMeters:
+          type: number
+        heartRate:
+          type: ["integer", "null"]
+        temperature:
+          type: ["number", "null"]
+        vitalsConfidence:
+          type: ["number", "null"]
+        heartRateTrend:
+          type: ["string", "null"]
+        parentName:
+          type: string
+        parentPhone:
+          type: string
+        parentStatus:
+          type: string
+        ambulanceId:
+          type: ["string", "null"]
+        ambulanceUnit:
+          type: ["string", "null"]
+        ambulanceEtaMinutes:
+          type: ["integer", "null"]
+        ambulanceDistanceKm:
+          type: ["number", "null"]
+        hospitalId:
+          type: ["string", "null"]
+        hospitalName:
+          type: ["string", "null"]
+        impactMagnitude:
+          type: ["number", "null"]
+        createdAt:
+          type: string
+        updatedAt:
+          type: string
+        resolvedAt:
+          type: ["string", "null"]
+      required:
+        - id
+        - childId
+        - childName
+        - childAge
+        - severity
+        - status
+        - incidentType
+        - latitude
+        - longitude
+        - parentName
+        - parentPhone
+        - parentStatus
+        - createdAt
+        - updatedAt
+
+    IncidentInput:
+      type: object
+      properties:
+        childId:
+          type: string
+        severity:
+          type: string
+        incidentType:
+          type: string
+        latitude:
+          type: number
+        longitude:
+          type: number
+        locationAddress:
+          type: string
+        impactMagnitude:
+          type: number
+        heartRate:
+          type: integer
+        temperature:
+          type: number
+      required: [childId, severity, incidentType, latitude, longitude]
+
+    IncidentStatusUpdate:
+      type: object
+      properties:
+        status:
+          type: string
+        ambulanceId:
+          type: string
+        hospitalId:
+          type: string
+        responderNotes:
+          type: string
+      required: [status]
+
+    VitalsReading:
+      type: object
+      properties:
+        id:
+          type: string
+        incidentId:
+          type: string
+        heartRate:
+          type: integer
+        temperature:
+          type: number
+        accelerometerX:
+          type: ["number", "null"]
+        accelerometerY:
+          type: ["number", "null"]
+        accelerometerZ:
+          type: ["number", "null"]
+        impactMagnitude:
+          type: ["number", "null"]
+        latitude:
+          type: ["number", "null"]
+        longitude:
+          type: ["number", "null"]
+        confidence:
+          type: number
+        alerts:
+          type: array
+          items:
+            type: string
+        timestamp:
+          type: string
+      required: [id, incidentId, heartRate, temperature, confidence, alerts, timestamp]
+
+    VitalsInput:
+      type: object
+      properties:
+        heartRate:
+          type: integer
+        temperature:
+          type: number
+        accelerometerX:
+          type: number
+        accelerometerY:
+          type: number
+        accelerometerZ:
+          type: number
+        latitude:
+          type: number
+        longitude:
+          type: number
+        confidence:
+          type: number
+      required: [heartRate, temperature, confidence]
+
+    Child:
+      type: object
+      properties:
+        id:
+          type: string
+        name:
+          type: string
+        age:
+          type: integer
+        gender:
+          type: string
+        bloodType:
+          type: ["string", "null"]
+        allergies:
+          type: array
+          items:
+            type: string
+        medications:
+          type: array
+          items:
+            type: string
+        medicalConditions:
+          type: array
+          items:
+            type: string
+        parentName:
+          type: string
+        parentPhone:
+          type: string
+        deviceId:
+          type: ["string", "null"]
+        createdAt:
+          type: string
+      required: [id, name, age, gender, allergies, medications, medicalConditions, parentName, parentPhone, createdAt]
+
+    ChildInput:
+      type: object
+      properties:
+        name:
+          type: string
+        age:
+          type: integer
+        gender:
+          type: string
+        bloodType:
+          type: string
+        allergies:
+          type: array
+          items:
+            type: string
+        medications:
+          type: array
+          items:
+            type: string
+        medicalConditions:
+          type: array
+          items:
+            type: string
+        parentName:
+          type: string
+        parentPhone:
+          type: string
+        deviceId:
+          type: string
+      required: [name, age, gender, parentName, parentPhone]
+
+    Hospital:
+      type: object
+      properties:
+        id:
+          type: string
+        name:
+          type: string
+        type:
+          type: string
+        latitude:
+          type: number
+        longitude:
+          type: number
+        address:
+          type: string
+        phone:
+          type: string
+        distanceKm:
+          type: ["number", "null"]
+        etaMinutes:
+          type: ["integer", "null"]
+        traumaBeds:
+          type: integer
+        icuBeds:
+          type: integer
+        hasPediatricTeam:
+          type: boolean
+        hasTraumaSurgery:
+          type: boolean
+        hasCTScan:
+          type: boolean
+        rating:
+          type: number
+        confidenceScore:
+          type: ["number", "null"]
+      required: [id, name, type, latitude, longitude, address, phone, traumaBeds, icuBeds, hasPediatricTeam, hasTraumaSurgery, hasCTScan, rating]
+
+    Ambulance:
+      type: object
+      properties:
+        id:
+          type: string
+        unitNumber:
+          type: string
+        driverName:
+          type: string
+        driverPhone:
+          type: string
+        status:
+          type: string
+        latitude:
+          type: number
+        longitude:
+          type: number
+        speedKmh:
+          type: ["number", "null"]
+        assignedIncidentId:
+          type: ["string", "null"]
+        updatedAt:
+          type: string
+      required: [id, unitNumber, driverName, driverPhone, status, latitude, longitude, updatedAt]
+
+    LocationUpdate:
+      type: object
+      properties:
+        latitude:
+          type: number
+        longitude:
+          type: number
+        speedKmh:
+          type: number
+      required: [latitude, longitude]
+
+    Message:
+      type: object
+      properties:
+        id:
+          type: string
+        incidentId:
+          type: string
+        senderType:
+          type: string
+        senderName:
+          type: string
+        recipientType:
+          type: string
+        messageType:
+          type: string
+        content:
+          type: string
+        deliveryStatus:
+          type: string
+        createdAt:
+          type: string
+      required: [id, incidentId, senderType, senderName, recipientType, messageType, content, deliveryStatus, createdAt]
+
+    MessageInput:
+      type: object
+      properties:
+        incidentId:
+          type: string
+        senderType:
+          type: string
+        senderName:
+          type: string
+        recipientType:
+          type: string
+        messageType:
+          type: string
+        content:
+          type: string
+      required: [incidentId, senderType, senderName, recipientType, messageType, content]
+
+    DashboardSummary:
+      type: object
+      properties:
+        activeIncidents:
+          type: integer
+        criticalIncidents:
+          type: integer
+        moderateIncidents:
+          type: integer
+        resolvedToday:
+          type: integer
+        averageResponseTimeMinutes:
+          type: number
+        ambulancesDeployed:
+          type: integer
+        ambulancesAvailable:
+          type: integer
+        hospitalsAlerted:
+          type: integer
+        totalChildrenRegistered:
+          type: integer
+      required:
+        - activeIncidents
+        - criticalIncidents
+        - moderateIncidents
+        - resolvedToday
+        - averageResponseTimeMinutes
+        - ambulancesDeployed
+        - ambulancesAvailable
+        - hospitalsAlerted
+        - totalChildrenRegistered
+
+    ActiveIncidentSummary:
+      type: object
+      properties:
+        incidentId:
+          type: string
+        childName:
+          type: string
+        childAge:
+          type: integer
+        severity:
+          type: string
+        status:
+          type: string
+        heartRate:
+          type: ["integer", "null"]
+        temperature:
+          type: ["number", "null"]
+        ambulanceEtaMinutes:
+          type: ["integer", "null"]
+        hospitalName:
+          type: ["string", "null"]
+        elapsedMinutes:
+          type: integer
+        latitude:
+          type: number
+        longitude:
+          type: number
+      required:
+        - incidentId
+        - childName
+        - childAge
+        - severity
+        - status
+        - elapsedMinutes
+        - latitude
+        - longitude
+
+    TimelineEvent:
+      type: object
+      properties:
+        id:
+          type: string
+        incidentId:
+          type: string
+        eventType:
+          type: string
+        title:
+          type: string
+        description:
+          type: string
+        metadata:
+          type: object
+          additionalProperties: true
+        timestamp:
+          type: string
+      required: [id, incidentId, eventType, title, description, timestamp]
+
+    SensorDataInput:
+      type: object
+      properties:
+        deviceId:
+          type: string
+        accelerometerX:
+          type: number
+        accelerometerY:
+          type: number
+        accelerometerZ:
+          type: number
+        heartRate:
+          type: integer
+        skinTemperature:
+          type: number
+        latitude:
+          type: number
+        longitude:
+          type: number
+        timestamp:
+          type: string
+      required: [deviceId, accelerometerX, accelerometerY, accelerometerZ, timestamp]
+
+    SensorDataResult:
+      type: object
+      properties:
+        impactDetected:
+          type: boolean
+        severity:
+          type: string
+        impactMagnitude:
+          type: number
+        filteredHeartRate:
+          type: ["integer", "null"]
+        filteredTemperature:
+          type: ["number", "null"]
+        incidentCreated:
+          type: boolean
+        incidentId:
+          type: ["string", "null"]
+        alerts:
+          type: array
+          items:
+            type: string
+      required: [impactDetected, severity, impactMagnitude, incidentCreated, alerts]

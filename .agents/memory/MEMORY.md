@@ -1,0 +1,2 @@
+- [Orval URL mismatches](orval-url-mismatches.md) — generated client URLs must match spec paths exactly; mismatches silently 404 in the browser
+- [Orval TS2308 fix](orval-ts2308.md) — path-param + query-param operations collide; fix by removing query params from those operations in the spec
